@@ -1,0 +1,132 @@
+FROM ubuntu:focal as base
+
+ENV TZ=America/Los_Angeles
+ENV DEBIAN_FRONTEND=noninteractive
+
+######################################################################
+## build the system libraries needed to run Ray
+
+FROM base as base-deps
+
+ARG K8S
+ARG WHEEL
+ARG WHEEL_URL
+
+ENV AUTOSCALER="autoscaler"
+ENV HOME=/home/ray
+ENV PATH "/home/ray/anaconda3/bin:$PATH"
+ENV PYTHON_VERSION=3.8.3
+
+RUN set -eux; \
+	apt-get update ; \
+	apt-get upgrade -y ; \
+	apt-get install -y --no-install-recommends \
+		sudo tzdata \
+	; \
+    	rm -rf /var/lib/apt/lists/* ; \
+	apt-get clean
+
+ENV RAY_UID=1000
+ENV RAY_GID=100
+
+RUN set -eux; \
+    useradd -ms /bin/bash -d /home/ray ray --uid $RAY_UID --gid $RAY_GID ; \
+    usermod -aG sudo ray ; \
+    echo 'ray ALL=NOPASSWD: ALL' >> /etc/sudoers
+
+USER $RAY_UID
+
+RUN set -eux; \
+	sudo apt-get update ; \
+	sudo apt-get upgrade -y ; \
+	sudo apt-get install -y --no-install-recommends \
+		git wget cmake g++ zlib1g-dev \
+		tmux screen rsync openssh-client gnupg \
+	; \
+    	sudo rm -rf /var/lib/apt/lists/* ; \
+	sudo apt-get clean
+
+# install miniconda
+ENV CONDA_DIR $HOME/anaconda3
+
+RUN set -eux; \
+	wget --no-check-certificate https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh ; \
+	/bin/bash /tmp/miniconda.sh -b -p $CONDA_DIR
+
+# add to path so we can use `conda activate`
+ENV PATH=$CONDA_DIR/bin:$PATH
+
+RUN set -eux; \
+	$CONDA_DIR/bin/conda init ; \
+	echo 'export PATH=$CONDA_DIR/bin:$PATH' >> /home/ray/.bashrc ; \
+	rm /tmp/miniconda.sh
+
+# blist is needed for numpy (which gets re-installed when Ray is installed)
+RUN set -eux; \
+	$CONDA_DIR/bin/conda install -y libgcc python=$PYTHON_VERSION ; \
+	$CONDA_DIR/bin/conda clean -y --all ; \
+	$CONDA_DIR/bin/pip install --no-cache-dir \
+		flatbuffers cython==0.29.23 numpy\>=1.20 psutil blist
+
+# to avoid the following error on Jenkins:
+# AttributeError: 'numpy.ufunc' object has no attribute '__module__'
+
+# also, we install cmake temporarily to get psutil, blist
+# we keep g++ on GPU images, because uninstalling removes CUDA Devel tooling
+RUN set -eux; \
+	$CONDA_DIR/bin/pip uninstall -y dask ; \
+	sudo apt-get autoremove -y cmake zlib1g-dev g++
+
+# install kubectl
+RUN set -eux; \
+	wget --no-check-certificate "https://dl.k8s.io/release/$K8S/bin/linux/amd64/kubectl" -O /tmp/kubectl ; \
+	wget --no-check-certificate "https://dl.k8s.io/$K8S/bin/linux/amd64/kubectl.sha256" -O /tmp/kubectl.sha256 ; \
+	echo "$(cat /tmp/kubectl.sha256) /tmp/kubectl" | sha256sum --check ; \
+	sudo mv /tmp/kubectl /usr/local/bin/kubectl ; \
+	sudo chown $(whoami) /usr/local/bin/kubectl ; \
+	sudo chgrp $RAY_GID /usr/local/bin/kubectl ; \
+	sudo chmod 0755 /usr/local/bin/kubectl ; \
+	rm /tmp/kubectl.sha256
+
+######################################################################
+## install Python libraries needed to run Ray on Kubernetes
+
+FROM base-deps as ray-deps
+
+USER $RAY_UID
+WORKDIR $HOME
+
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
+RUN set -eux; \
+	wget --no-check-certificate $WHEEL_URL -O /tmp/$WHEEL ; \
+	$CONDA_DIR/bin/pip --no-cache-dir install --find-links /tmp/$WHEEL \
+		/tmp/$WHEEL[all] \
+		"six==1.13.0" \
+		"boto3==1.4.8" \
+		"google-api-python-client==1.7.8" \
+		"google-oauth" \
+		"kubernetes" \
+		"azure-cli-core==2.22.0" \
+		"azure-mgmt-compute==14.0.0" \
+		"azure-mgmt-msi==1.0.0" \
+		"azure-mgmt-network==10.2.0" \
+		"azure-mgmt-resource==13.0.0" \
+		"kopf" \
+	; \
+	$CONDA_DIR/bin/pip uninstall ray -y
+
+######################################################################
+## build Ray
+## NB: this layer looks silly; we're in no position yet to judge
+
+FROM ray-deps as ray-base
+
+USER $RAY_UID
+WORKDIR $HOME
+
+RUN set -eux; \
+	$CONDA_DIR/bin/pip --no-cache-dir install --find-links /tmp/$WHEEL \
+		/tmp/$WHEEL[all] ; \
+	sudo rm /tmp/$WHEEL

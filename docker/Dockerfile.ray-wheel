@@ -1,0 +1,90 @@
+FROM ubuntu:20.04 as base
+ENV TZ=Europe/Berlin
+ENV DEBIAN_FRONTEND=noninteractive
+
+SHELL ["/bin/bash", "-c"]
+
+ARG GIT_TAG
+
+######################################################################
+## install system libraries for building Ray wheel
+
+FROM base as ray-wheel
+USER root
+
+## create a known user ID
+ENV HOME="/opt/ray"
+WORKDIR $HOME
+
+RUN set -eux; \
+	groupadd -g 999 appuser ; \
+	useradd -r -u 999 -g appuser appuser ; \
+	usermod -d $HOME appuser ; \
+	chown -R appuser:appuser $HOME ; \
+	chmod -R u+rw $HOME
+
+## apt-get system libraries
+RUN set -eux; \
+	apt-get update ; \
+	apt-get upgrade -y ; \
+	apt-get install -y --no-install-recommends \
+		tzdata build-essential psmisc \
+		wget curl unzip \
+		git gpg-agent ca-certificates \
+		apt-transport-https apt-utils \
+		python3.8 cython python3-pytest python3.8-distutils python3.8-dev python3.8-venv \
+	; \
+	rm -rf /var/lib/apt/lists/*
+
+## install npm, per
+## https://github.com/nodesource/distributions/blob/master/README.md#debinstall
+RUN set -eux; \
+	curl -fsSL https://deb.nodesource.com/setup_17.x | /bin/bash - ; \
+	apt-get update ; \
+	apt-get upgrade -y ; \
+	apt-get install -y --no-install-recommends \
+		nodejs \
+	; \
+	rm -rf /var/lib/apt/lists/*
+
+## install Python 3.8
+RUN set -eux; \
+	wget https://bootstrap.pypa.io/get-pip.py -O get-pip.py ; \
+	python3.8 get-pip.py ; \
+	python3.8 -m pip install -U pip ; \
+	ln -s /usr/bin/python3 /usr/bin/python
+
+## install Python dependencies, as user
+USER appuser
+
+RUN set -eux; \
+	python3.8 -m pip install --upgrade pip wheel setuptools ; \
+	python3.8 -m pip install cython==0.29.26 pytest
+
+## clone Ray repo
+RUN set -eux; \
+	git clone https://github.com/ray-project/ray.git ; \
+	cd ray ; \
+	git checkout $GIT_TAG
+
+## install Bazel for Ray
+RUN set -eux; \
+	ray/ci/travis/install-bazel.sh
+
+## build the Ray dashboard
+ENV NODE_OPTIONS="--openssl-legacy-provider"
+
+RUN set -eux; \
+	cd ray/dashboard/client ; \
+	npm install ; \
+	npm run build
+
+##HALP!
+RUN set -eux; \
+	/usr/bin/env python3 ; \
+	/usr/bin/env python
+
+## install Ray
+RUN set -eux; \
+	cd ray/python ; \
+	python3.8 -m pip install -e . --verbose  # Add --user if you see a permission denied error.
