@@ -58,7 +58,7 @@ limited to only two releases:
 
   * `1.7.0`
   <https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-1.7.0-cp38-cp38-manylinux2014_x86_64.whl>  
-  which has the `log4j` vulnerability and other issues
+  which has the `log4j` vulnerability and other security issues
 
   * `2.0.0.dev0`
   <https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-2.0.0.dev0-cp38-cp38-manylinux2014_x86_64.whl>
@@ -70,9 +70,9 @@ did seem incongruous. Also, good luck trying to determine that fact
 from the documentation!
 
 If you look closely through notes from Ray committers on the GitHub
-repo, only the nightly builds from "head" are made available.
+issues for Ray, only the nightly builds from "head" are made available.
 
-This is unacceptable to use due to:
+This is unacceptable due to:
 
   * When runnning Ray on K8s, different system components need to use  
     the same Ray release.
