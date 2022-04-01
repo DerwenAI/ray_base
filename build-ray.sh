@@ -1,4 +1,5 @@
-#!/usr/bin/env bash -x
+#!/usr/bin/env bash
+set -eux
 
 # per:
 # https://docs.ray.io/en/latest/ray-overview/installation.html#installing-from-a-specific-commit
@@ -33,5 +34,5 @@ K8S=$(wget --no-check-certificate https://dl.k8s.io/release/stable.txt -O /dev/s
 
 docker build \
 	--build-arg WHEEL_PATH="$WHEEL_PATH" --build-arg WHEEL="$WHEEL" --build-arg K8S="$K8S" \
-	--pull --rm -f "docker/Dockerfile.ray-base" \
+	--pull --rm -f "Dockerfile.ray-base" \
 	-t ray-base:latest .

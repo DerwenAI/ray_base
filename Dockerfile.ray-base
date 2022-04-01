@@ -8,8 +8,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 FROM base as base-deps
 
-ARG WHEEL_PATH
-ARG WHEEL
 ARG K8S
 
 ENV AUTOSCALER="autoscaler"
@@ -93,13 +91,16 @@ RUN set -eux; \
 
 FROM base-deps as ray-deps
 
+ARG WHEEL_PATH
+ARG WHEEL
+
 USER $RAY_UID
 WORKDIR $HOME
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
-COPY $WHEEL_URL /tmp/$WHEEL
+COPY $WHEEL_PATH /tmp/$WHEEL
 
 RUN set -eux; \
 	$CONDA_DIR/bin/pip --no-cache-dir install --find-links /tmp/$WHEEL \
@@ -120,9 +121,13 @@ RUN set -eux; \
 
 ######################################################################
 ## build Ray
-## NB: this layer looks silly; we're in no position yet to judge
+## NB: this layer looks silly; we're in no position yet to judge -
+## In other words, much of what comes out of Anyscale is convoluted
+## although discussion about their approach is rare.
 
 FROM ray-deps as ray-base
+
+ARG WHEEL
 
 USER $RAY_UID
 WORKDIR $HOME
