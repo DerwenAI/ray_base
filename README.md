@@ -74,14 +74,9 @@ issues for Ray, only the nightly builds from "head" are made available.
 
 This is unacceptable due to:
 
-  * When runnning Ray on K8s, different system components need to use  
-    the same Ray release.
-
-  * We cannot run crucial system components from "head" commits and  
-    must tie our builds to specific point releases.
-
-  * The Ray project has a long and coloful history of unexpected or  
-    undocumented breaking changes.
+  * When runnning Ray on K8s, different system components need to use the same Ray release.
+  * We cannot run crucial system components from "head" commits and must tie our builds to specific point releases.
+  * The Ray project has a long and coloful history of unexpected or undocumented breaking changes.
 
 Overall, these blockers pose red-flags for enterprise customers who
 work within regulated enviornments accountable to independent security
@@ -132,6 +127,8 @@ Then edit parameters in the following script and run it:
 ```
 ./build-ray.sh
 ```
+
+This will build the image `ray-base` locally.
 
 
 ## Security scans
