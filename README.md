@@ -21,10 +21,10 @@ dependencies better with regards to security concerns.
 
 Our targets are:
 
-  * Ubuntu 20.04 LTS
+  * Ubuntu `20.04 LTS`
   * 64-bit architecture
-  * Python 3.8.3
-  * Ray release 1.11.0, or possibly back as far as 1.9.2
+  * Python `3.8.3`
+  * Ray `1.11.0` or possibly back as far as `1.9.2`
 
 
 ## Blockers
@@ -65,8 +65,8 @@ limited to only two releases:
 
 The latter wheel `2.0.0.dev0` is for a nightly build of the "head"
 commit in the Ray `master` branch. Considering how the latest release
-of Ray is `1.11.0` (as of the date of this writing: 2022-03-21) that
-did seem incongruous. Also, good luck trying to determine that fact
+of Ray is `1.11.0` (as of the date of this writing: 2022-03-21) this
+did seem incongruous. Also, good luck trying to determine this fact
 from the documentation!
 
 If you look closely through notes from Ray committers on the GitHub
