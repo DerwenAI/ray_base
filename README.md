@@ -49,6 +49,10 @@ multiple errors:
   * <https://docs.ray.io/en/latest/ray-contribute/development.html#building-ray-on-linux-macos-full>
   * <https://discuss.ray.io/t/trying-to-build-containers-from-ray-wheels/5618>
 
+While there is documentation for
+["Installing from a specific commit"](https://docs.ray.io/en/latest/ray-overview/installation.html#installing-from-a-specific-commit),
+**those instructions do not work**.
+
 In brief, the availability of pre-built wheels for Ray appears to be
 limited to only two releases:
 
@@ -64,10 +68,6 @@ commit in the Ray `master` branch. Considering how the latest release
 of Ray is `1.11.0` (as of the date of this writing: 2022-03-21) that
 did seem incongruous. Also, good luck trying to determine that fact
 from the documentation!
-
-While there is documentation for
-["Installing from a specific commit"](https://docs.ray.io/en/latest/ray-overview/installation.html#installing-from-a-specific-commit),
-**those instructions do not work**.
 
 If you look closely through notes from Ray committers on the GitHub
 repo, only the nightly builds from "head" are made available.
