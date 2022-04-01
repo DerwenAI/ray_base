@@ -27,12 +27,21 @@ WHEEL_URL=$AWS_BUCKET/$COMMIT_HASH/ray-$RAY_VERSION-$PYTHON_VERSION-$PYTHON_VERS
 # releases
 
 # instead, we've built a wheel and moved it into this directory:
+RAY_VERSION="1.11.0"
+PYTHON_VERSION="cp38" 
+OS_VERSION="anylinux2014_x86_64"
+TAG=$RAY_VERSION-$PYTHON_VERSION-$OS_VERSION
+
 WHEEL_PATH="./ray-1.11.0-cp38-cp38-manylinux2014_x86_64.whl"
 WHEEL=$(basename $WHEEL_PATH)
 
 K8S=$(wget --no-check-certificate https://dl.k8s.io/release/stable.txt -O /dev/stdout)
 
+HUB_USER="derwenai"
+REPO_NAME="ray_base"
+BUILD_URL=$HUB_USER/$REPO_NAME:$TAG
+
 docker build \
 	--build-arg WHEEL_PATH="$WHEEL_PATH" --build-arg WHEEL="$WHEEL" --build-arg K8S="$K8S" \
 	--pull --rm -f "Dockerfile.ray-base" \
-	-t ray-base:latest .
+	-t $BUILD_URL .

@@ -2,6 +2,8 @@
 
 _Docker build for a base image for running Ray on K8s on Azure_
 
+<https://hub.docker.com/repository/docker/derwenai/ray_base>
+
 
 ## Problem statement
 
@@ -130,8 +132,11 @@ Then edit parameters in the following script and run it:
 
 This will build the image `ray-base` locally.
 
+NB: while the last layer looks entirely redundant, this follows the
+Ray build directly.
 
-## Security scans
+
+## Step 3: perform a vulnerability scan
 
 We use [`grype`](https://github.com/anchore/grype) for security scans
 of container images. To install:
@@ -140,13 +145,32 @@ of container images. To install:
 curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
 ```
 
-Then run `grype` for security vulnerability analysis of a specific
-container image:
+Then run `grype` for security vulnerability analysis of a container
+image, based on the `BUILD_URL` tag from the build script:
 
 ```
-grype -o json --only-fixed ray-base:latest > cve.json
+grype -o json --only-fixed derwenai/ray_base:1.11.0-cp38-anylinux2014_x86_64 > cve.json
 ```
 
 This will produce a JSON file `cve.json` with vulnerabilities listed
 for the container, where the reported vulnerabilities are limited to
 those for which known fixes are available.
+
+
+## Step 4: push the base image to DockerHub
+
+First login with your credentials on DockerHub:
+
+```
+docker login
+```
+
+Then push the image, based on the `BUILD_URL` tag from the build
+script:
+
+```
+docker push derwenai/ray_base:1.11.0-cp38-anylinux2014_x86_64
+```
+
+Now the image is available on
+<https://hub.docker.com/repository/docker/derwenai/ray_base>
