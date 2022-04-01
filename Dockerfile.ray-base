@@ -8,9 +8,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 FROM base as base-deps
 
-ARG K8S
+ARG WHEEL_PATH
 ARG WHEEL
-ARG WHEEL_URL
+ARG K8S
 
 ENV AUTOSCALER="autoscaler"
 ENV HOME=/home/ray
@@ -99,8 +99,9 @@ WORKDIR $HOME
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
+COPY $WHEEL_URL /tmp/$WHEEL
+
 RUN set -eux; \
-	wget --no-check-certificate $WHEEL_URL -O /tmp/$WHEEL ; \
 	$CONDA_DIR/bin/pip --no-cache-dir install --find-links /tmp/$WHEEL \
 		/tmp/$WHEEL[all] \
 		"six==1.13.0" \
