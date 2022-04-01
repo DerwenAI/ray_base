@@ -17,9 +17,10 @@ These were based on:
 However, our enterprise customer's independent security audits have
 identified multiple high-severity security vulnerabilities in the Ray
 base images available on DockerHub. Our attempts to patch pre-built
-images with security updates proved to be problematic. Consequently we
-must build containers to deploy to AKS, so that we can manage
-dependencies better with regards to security concerns.
+images with security updates proved to be problematic. Also, we've
+seen compiler conflicts in our C++ code due to the Ray base images.
+Consequently we must build containers to deploy to AKS, so that we
+can manage dependencies better with regards to security concerns.
 
 Our targets are:
 
