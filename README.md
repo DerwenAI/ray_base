@@ -83,7 +83,7 @@ This is unacceptable due to:
   * the Ray project has a long and coloful history of unexpected or undocumented breaking changes
 
 Overall, these blockers pose red-flags for enterprise customers who
-work within regulated enviornments accountable to independent security
+work within regulated environments accountable to independent security
 audits.
 
 
