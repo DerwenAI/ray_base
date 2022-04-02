@@ -1,6 +1,6 @@
 FROM ubuntu:focal as base
 
-ENV TZ=America/Los_Angeles
+ENV TZ=Europe/Berlin
 ENV DEBIAN_FRONTEND=noninteractive
 
 ######################################################################
@@ -8,47 +8,39 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 FROM base as base-deps
 
+ARG CONDA_URL
 ARG K8S
-
-ENV AUTOSCALER="autoscaler"
-ENV HOME=/home/ray
-ENV PATH "/home/ray/anaconda3/bin:$PATH"
-ENV PYTHON_VERSION=3.8.3
+ARG PY_VER
 
 RUN set -eux; \
 	apt-get update ; \
 	apt-get upgrade -y ; \
 	apt-get install -y --no-install-recommends \
 		sudo tzdata \
+		git wget cmake g++ zlib1g-dev \
+		tmux screen rsync openssh-client gnupg \
+		libsasl2-modules-sql \
 	; \
     	rm -rf /var/lib/apt/lists/* ; \
 	apt-get clean
 
+# create a non-sudo user
+ENV HOME=/home/ray
 ENV RAY_UID=1000
 ENV RAY_GID=100
 
 RUN set -eux; \
-    useradd -ms /bin/bash -d /home/ray ray --uid $RAY_UID --gid $RAY_GID ; \
+    useradd -ms /bin/bash -d $HOME ray --uid $RAY_UID --gid $RAY_GID ; \
     usermod -aG sudo ray ; \
     echo 'ray ALL=NOPASSWD: ALL' >> /etc/sudoers
 
 USER $RAY_UID
 
-RUN set -eux; \
-	sudo apt-get update ; \
-	sudo apt-get upgrade -y ; \
-	sudo apt-get install -y --no-install-recommends \
-		git wget cmake g++ zlib1g-dev \
-		tmux screen rsync openssh-client gnupg \
-	; \
-    	sudo rm -rf /var/lib/apt/lists/* ; \
-	sudo apt-get clean
-
 # install miniconda
 ENV CONDA_DIR $HOME/anaconda3
 
 RUN set -eux; \
-	wget --no-check-certificate https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh ; \
+	wget --no-check-certificate $CONDA_URL -O /tmp/miniconda.sh ; \
 	/bin/bash /tmp/miniconda.sh -b -p $CONDA_DIR
 
 # add to path so we can use `conda activate`
@@ -56,21 +48,25 @@ ENV PATH=$CONDA_DIR/bin:$PATH
 
 RUN set -eux; \
 	$CONDA_DIR/bin/conda init ; \
-	echo 'export PATH=$CONDA_DIR/bin:$PATH' >> /home/ray/.bashrc ; \
+	echo 'export PATH=$CONDA_DIR/bin:$PATH' >> $HOME/.bashrc ; \
 	rm /tmp/miniconda.sh
 
-# blist is needed for numpy (which gets re-installed when Ray is installed)
+# blist is needed for NumPy (which gets re-installed when Ray is installed)
 RUN set -eux; \
-	$CONDA_DIR/bin/conda install -y libgcc python=$PYTHON_VERSION ; \
+	$CONDA_DIR/bin/conda install -y libgcc python=$PY_VERS ; \
 	$CONDA_DIR/bin/conda clean -y --all ; \
 	$CONDA_DIR/bin/pip install --no-cache-dir \
-		flatbuffers cython==0.29.23 numpy\>=1.20 psutil blist
+		"blist" \
+		"cython==0.29.23" \
+		"flatbuffers" \
+		"numpy>=1.20" \
+		"psutil"
 
-# to avoid the following error on Jenkins:
+# this helps avoid the following error on Jenkins:
 # AttributeError: 'numpy.ufunc' object has no attribute '__module__'
 
-# also, we install cmake temporarily to get psutil, blist
-# we keep g++ on GPU images, because uninstalling removes CUDA Devel tooling
+# only install cmake temporarily for blist, psutil
+# keep g++ on GPU images, since uninstalling removes CUDA Devel tooling
 RUN set -eux; \
 	$CONDA_DIR/bin/pip uninstall -y dask ; \
 	sudo apt-get autoremove -y cmake zlib1g-dev g++
@@ -91,7 +87,6 @@ RUN set -eux; \
 
 FROM base-deps as ray-deps
 
-ARG WHEEL_PATH
 ARG WHEEL
 
 USER $RAY_UID
@@ -100,7 +95,7 @@ WORKDIR $HOME
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
-COPY $WHEEL_PATH /tmp/$WHEEL
+COPY $WHEEL /tmp/$WHEEL
 
 RUN set -eux; \
 	$CONDA_DIR/bin/pip --no-cache-dir install --find-links /tmp/$WHEEL \
@@ -121,9 +116,10 @@ RUN set -eux; \
 
 ######################################################################
 ## build Ray
-## NB: this layer looks silly; we're in no position yet to judge -
-## In other words, much of what comes out of Anyscale is convoluted
-## although discussion about their approach is rare.
+##
+## NB: this layer looks silly, though we're in no position to judge -
+## Much of what comes out of Anyscale looks convoluted, although
+## discussions about their approach is rare.
 
 FROM ray-deps as ray-base
 

@@ -1,0 +1,8 @@
+## 2022-04-02
+
+  * CVE-2022-24407 `cyrus-sasl2` <https://ubuntu.com/security/notices/USN-5301-2>
+
+
+## 2022-04-01
+
+  * confirmed that a purpose-built Ray base image works correctly on Azure AKS
