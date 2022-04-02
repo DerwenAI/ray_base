@@ -7,20 +7,21 @@ _Docker build for a base image for running Ray on K8s on Azure_
 
 ## Problem statement
 
-Our team has used the Ray base images on DockerHub to build container
-images deployed to Microsoft Azure, to run Ray on Kubernetes on AKS.
-These were based on:
+Our team previously used the Ray base images on DockerHub to build
+container images deployed to Microsoft Azure, to run Ray on Kubernetes
+on AKS. These were based on:
 
   * <https://hub.docker.com/r/rayproject/ray/tags>
   * <https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough-portal>
 
-However, our enterprise customer's independent security audits have
-identified multiple high-severity security vulnerabilities in the Ray
-base images available on DockerHub. Our attempts to patch pre-built
-images with security updates proved to be problematic. Also, we've
-seen compiler conflicts in our C++ code due to the Ray base images.
-Consequently we must build containers to deploy to AKS, so that we
-can manage dependencies better with regards to security concerns.
+However, this practice cause multiple issues:
+
+  * independent security audits identified high-severity security vulnerabilities in the Ray base images
+  * attempts to patch these pre-built images with security updates proved ineffective
+  * we experienced compiler conflicts with our C++ code due to configuration of the Ray base images
+
+Consequently we must build containers to deploy to AKS, so that we can
+manage dependencies better with regards to security concerns.
 
 Our targets are:
 
@@ -77,9 +78,9 @@ issues for Ray, only the nightly builds from "head" are made available.
 
 This is unacceptable due to:
 
-  * When runnning Ray on K8s, different system components need to use the same Ray release.
-  * We cannot run crucial system components from "head" commits and must tie our builds to specific point releases.
-  * The Ray project has a long and coloful history of unexpected or undocumented breaking changes.
+  * when runnning Ray on K8s, different system components need to use the same Ray release
+  * we cannot run crucial system components from "head" commits and must tie our builds to specific point releases
+  * the Ray project has a long and coloful history of unexpected or undocumented breaking changes
 
 Overall, these blockers pose red-flags for enterprise customers who
 work within regulated enviornments accountable to independent security
@@ -88,8 +89,9 @@ audits.
 
 ## Step 1: build a Ray wheel for a specific release and platform
 
-Clone the Ray repo from GitHub, then checkout for a specific tag. In
-our case we want Ray release `1.11.0` so `tags/ray-1.11.0` is the
+Clone the Ray repo from GitHub, then checkout for a specific tag.
+
+In our case we want Ray release `1.11.0` so `tags/ray-1.11.0` is the
 corresponding tag for its `fec30a25dbb5f3fa81d2bf419f75f5d40bc9fc39`
 commit.
 
