@@ -10,14 +10,14 @@ FROM base as base-deps
 
 ARG CONDA_URL
 ARG K8S
-ARG PY_VER
+ARG PY_VERS
 
 RUN set -eux; \
 	apt-get update ; \
 	apt-get upgrade -y ; \
 	apt-get install -y --no-install-recommends \
-		sudo tzdata \
-		git wget cmake g++ zlib1g-dev \
+		tzdata \
+		sudo git wget cmake g++ zlib1g-dev \
 		tmux screen rsync openssh-client gnupg \
 		libsasl2-modules-sql \
 	; \
@@ -69,7 +69,8 @@ RUN set -eux; \
 # keep g++ on GPU images, since uninstalling removes CUDA Devel tooling
 RUN set -eux; \
 	$CONDA_DIR/bin/pip uninstall -y dask ; \
-	sudo apt-get autoremove -y cmake zlib1g-dev g++
+	sudo apt-get autoremove -y \
+		cmake zlib1g-dev g++
 
 # install kubectl
 RUN set -eux; \
@@ -118,8 +119,8 @@ RUN set -eux; \
 ## build Ray
 ##
 ## NB: this layer looks silly, though we're in no position to judge -
-## Much of what comes out of Anyscale looks convoluted, although
-## discussions about their approach is rare.
+## Much of what comes out of Anyscale looks convoluted, though
+## discussion of their approaches is rare.
 
 FROM ray-deps as ray-base
 
