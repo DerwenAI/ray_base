@@ -86,6 +86,26 @@ Overall, these blockers pose red-flags for enterprise customers who
 work within regulated enviornments accountable to independent security
 audits.
 
+---
+
+## Setup
+
+Install the Python dependencies needed for analysis:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+python3 -m pip install -U pip
+python3 -m pip install -r requirements.txt
+```
+
+Also, we use [`grype`](https://github.com/anchore/grype) for security
+scans of container images:
+
+```bash
+curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+```
+
 
 ## Step 1: build a Ray wheel for a specific release and platform
 
@@ -130,7 +150,7 @@ the previous step into this directory.
 Then edit parameters in the following script and run it:
 
 ```bash
-./build-ray.sh
+source build-ray.sh
 ```
 
 This will build the image `ray-base` locally.
@@ -138,21 +158,16 @@ This will build the image `ray-base` locally.
 NB: while the last layer looks entirely redundant, this follows the
 Ray build directly.
 
+Be sure to use `source` to run this script, so that its `BUILD_URL`
+environment variable gets exported.
+
 
 ## Step 3: perform a vulnerability scan
 
-We use [`grype`](https://github.com/anchore/grype) for security scans
-of container images. To install:
+Run `grype` for security vulnerability analysis of a container image,
+based on the `BUILD_URL` tag from the build script:
 
 ```bash
-curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
-```
-
-Then run `grype` for security vulnerability analysis of a container
-image, based on the `BUILD_URL` tag from the build script:
-
-```bash
-export BUILD_URL="derwenai/ray_base:1.11.0-cp38-anylinux2014_x86_64"
 grype -o json --only-fixed $BUILD_URL > cve.json
 ```
 
