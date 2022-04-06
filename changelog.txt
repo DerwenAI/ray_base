@@ -1,3 +1,8 @@
+## 2022-04-06
+
+  * added the `summary.ipynb` Jupyter notebook to summarize actionable vulnerabilities and their suggested fixes
+  * removed stale Py packages from `conda` (wheels with incorrect platform or Py version)
+
 ## 2022-04-02
 
   * CVE-2022-24407 `cyrus-sasl2` <https://ubuntu.com/security/notices/USN-5301-2>
