@@ -133,3 +133,14 @@ RUN set -eux; \
 	$CONDA_DIR/bin/pip --no-cache-dir install --find-links /tmp/$WHEEL \
 		/tmp/$WHEEL[all] ; \
 	sudo rm /tmp/$WHEEL
+
+# remove Python packages flagged as security vulnerabilities
+RUN set -eux; \
+	rm -rf $CONDA_DIR/pkgs/conda-4.11.0-py39h06a4308_0/info/test/tests/data/env_metadata/envpy27win_whl/Lib/site-packages/ \
+	rm -rf $CONDA_DIR/pkgs/conda-4.11.0-py39h06a4308_0/info/test/tests/data/env_metadata/envpy37osx_whl/lib/python3.7/site-packages/ \
+	rm -rf $CONDA_DIR/pkgs/conda-4.11.0-py39h06a4308_0/info/test/tests/data/env_metadata/py27-osx-no-binary/lib/python2.7/site-packages/ \
+	rm -rf $CONDA_DIR/pkgs/conda-4.11.0-py39h06a4308_0/info/test/tests/data/env_metadata/py36-osx-whl/lib/python3.6/site-packages/ \
+	rm -rf $CONDA_DIR/pkgs/conda-4.12.0-py38h06a4308_0/info/test/tests/data/env_metadata/envpy27win_whl/Lib/site-packages/ \
+	rm -rf $CONDA_DIR/pkgs/conda-4.12.0-py38h06a4308_0/info/test/tests/data/env_metadata/envpy37osx_whl/lib/python3.7/site-packages/ \
+	rm -rf $CONDA_DIR/pkgs/conda-4.12.0-py38h06a4308_0/info/test/tests/data/env_metadata/py27-osx-no-binary/lib/python2.7/site-packages/ \
+	rm -rf $CONDA_DIR/pkgs/conda-4.12.0-py38h06a4308_0/info/test/tests/data/env_metadata/py36-osx-whl/lib/python3.6/site-packages/

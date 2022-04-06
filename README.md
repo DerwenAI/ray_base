@@ -95,7 +95,7 @@ In our case we want Ray release `1.11.0` so `tags/ray-1.11.0` is the
 corresponding tag for its `fec30a25dbb5f3fa81d2bf419f75f5d40bc9fc39`
 commit.
 
-```
+```bash
 git clone https://github.com/ray-project/ray.git
 cd ray
 git checkout tags/ray-1.11.0
@@ -110,7 +110,7 @@ Then see the file
 which describes running the following command from the root directory
 of the repo:
 
-```
+```bash
 docker run \
     -e TRAVIS_COMMIT=<commit_number_to_use> \
     --rm -w /ray -v `pwd`:/ray \
@@ -129,7 +129,7 @@ the previous step into this directory.
 
 Then edit parameters in the following script and run it:
 
-```
+```bash
 ./build-ray.sh
 ```
 
@@ -144,15 +144,16 @@ Ray build directly.
 We use [`grype`](https://github.com/anchore/grype) for security scans
 of container images. To install:
 
-```
+```bash
 curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
 ```
 
 Then run `grype` for security vulnerability analysis of a container
 image, based on the `BUILD_URL` tag from the build script:
 
-```
-grype -o json --only-fixed derwenai/ray_base:1.11.0-cp38-anylinux2014_x86_64 > cve.json
+```bash
+export BUILD_URL="derwenai/ray_base:1.11.0-cp38-anylinux2014_x86_64"
+grype -o json --only-fixed $BUILD_URL > cve.json
 ```
 
 This will produce a JSON file `cve.json` with vulnerabilities listed
@@ -160,19 +161,40 @@ for the container, where the reported vulnerabilities are limited to
 those for which known fixes are available.
 
 
-## Step 4: push the base image to DockerHub
+## Step 4: iterate on fixes
+
+Summarize the vulnerabilities to be fixed in the `summary.ipynb`
+notebook:
+
+```bash
+jupyter-lab
+```
+
+This produces the `todo.json` file which lists the vulnerabilities to
+be fixed.
+
+Now access a shell on the running container to attempt these changes:
+
+```bash
+docker run --rm -it $BUILD_URL
+```
+
+Then apply the successful patches to the `Dockerfile.ray-base` script.
+
+
+## Step 5: push the base image to DockerHub
 
 First login with your credentials on DockerHub:
 
-```
+```bash
 docker login
 ```
 
 Then push the image, based on the `BUILD_URL` tag from the build
 script:
 
-```
-docker push derwenai/ray_base:1.11.0-cp38-anylinux2014_x86_64
+```bash
+docker push $BUILD_URL
 ```
 
 Now the image is available on
