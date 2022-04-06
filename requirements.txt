@@ -1,0 +1,4 @@
+icecream >= 2.1
+jupyterlab >= 3.3
+pandas >= 1.4
+pydantic >= 1.9

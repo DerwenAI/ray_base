@@ -42,7 +42,8 @@ K8S=$(wget --no-check-certificate https://dl.k8s.io/release/stable.txt -O /dev/s
 HUB_USER="derwenai"
 REPO_NAME="ray_base"
 TAG="$RAY_VERSION-$PY_ABBR-$OS_VERSION"
-BUILD_URL="$HUB_USER/$REPO_NAME:$TAG"
+
+export BUILD_URL="$HUB_USER/$REPO_NAME:$TAG"
 
 docker build \
     --build-arg CONDA_URL="$CONDA_URL" \
